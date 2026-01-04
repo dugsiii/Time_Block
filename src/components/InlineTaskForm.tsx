@@ -34,8 +34,8 @@ export const InlineTaskForm = ({
       return // Don't submit empty title
     }
 
-    if (duration < 5) {
-      return // Minimum 5 minutes
+    if (duration < 1) {
+      return // Minimum 1 minute
     }
 
     onSubmit(title.trim(), duration)
@@ -81,8 +81,8 @@ export const InlineTaskForm = ({
         value={duration}
         onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
         inputProps={{
-          min: 5,
-          step: 15,
+          min: 1,
+          step: 1,
         }}
         sx={{ mb: 1.5 }}
       />
@@ -92,7 +92,7 @@ export const InlineTaskForm = ({
           type="submit"
           variant="contained"
           size="small"
-          disabled={!title.trim() || duration < 5}
+          disabled={!title.trim() || duration < 1}
           sx={{
             flex: 1,
             backgroundColor: '#000000',
