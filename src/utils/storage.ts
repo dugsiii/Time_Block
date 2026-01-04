@@ -1,4 +1,5 @@
 import { Task } from '../types'
+import { taskColors } from '../theme/theme'
 
 const STORAGE_KEY = 'time-block-app-tasks'
 
@@ -24,6 +25,7 @@ export const saveTasksToStorage = (tasks: Task[]): void => {
 /**
  * Load tasks from localStorage
  * Handles Date deserialization by converting ISO strings back to Date objects
+ * Also migrates old tasks to include color field if missing
  */
 export const loadTasksFromStorage = (): Task[] => {
   try {
@@ -40,7 +42,22 @@ export const loadTasksFromStorage = (): Task[] => {
       return value
     })
 
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    // Migration: Add color field to tasks that don't have it (backwards compatibility)
+    const migratedTasks = parsed.map((task, index) => {
+      if (!task.color) {
+        return {
+          ...task,
+          color: taskColors[index % taskColors.length]
+        }
+      }
+      return task
+    })
+
+    return migratedTasks
   } catch (error) {
     console.error('Failed to load tasks from localStorage:', error)
     return []

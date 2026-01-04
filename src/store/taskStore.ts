@@ -11,6 +11,7 @@ import {
   detectOverlaps,
   reorderTasks,
 } from '../utils/dragLogic'
+import { taskColors } from '../theme/theme'
 
 /**
  * Zustand store for task management
@@ -29,11 +30,13 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * Add a new task
    */
   addTask: (taskData) => {
+    const currentTaskCount = get().tasks.length
     const newTask: Task = {
       ...taskData,
       id: crypto.randomUUID(),
       createdAt: new Date(),
-      order: get().tasks.length, // Add at end
+      order: currentTaskCount, // Add at end
+      color: taskColors[currentTaskCount % taskColors.length], // Assign color based on current count
     }
 
     const updatedTasks = recalculateTaskTimes([...get().tasks, newTask])
@@ -77,12 +80,14 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * Insert a new task after a specific task (or at beginning if null)
    */
   insertTask: (afterTaskId, taskData) => {
+    const currentTaskCount = get().tasks.length
     const newTask: Task = {
       ...taskData,
       id: crypto.randomUUID(),
       createdAt: new Date(),
       order: 0, // Will be recalculated
       startTime: new Date(), // Will be recalculated
+      color: taskColors[currentTaskCount % taskColors.length], // Assign color based on current count
     }
 
     let updatedTasks: Task[]

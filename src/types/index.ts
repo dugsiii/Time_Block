@@ -10,6 +10,7 @@ export interface Task {
   order: number // Position in task list (for sorting)
   isOverlapping: boolean // Flagged when overlapping with locked tasks
   createdAt: Date // Metadata for sorting
+  color: string // Background color (assigned on creation, persists through reordering)
 }
 
 /**
@@ -44,12 +45,12 @@ export interface DragPreview {
  */
 export interface TaskStore extends AppState {
   // CRUD operations
-  addTask: (task: Omit<Task, 'id' | 'createdAt'>) => void
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'color'>) => void
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
 
   // Task operations
-  insertTask: (afterTaskId: string | null, task: Omit<Task, 'id' | 'createdAt' | 'order'>) => void
+  insertTask: (afterTaskId: string | null, task: Omit<Task, 'id' | 'createdAt' | 'order' | 'color'>) => void
   swapTasks: (taskId1: string, taskId2: string) => void
   pushTask: (draggedTaskId: string, targetTaskId: string) => void
 

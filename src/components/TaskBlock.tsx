@@ -4,7 +4,7 @@ import LockOpenIcon from '@mui/icons-material/LockOpen'
 import WarningIcon from '@mui/icons-material/Warning'
 import { Task } from '../types'
 import { formatDuration } from '../utils/timeCalculations'
-import { getTaskColor, colors } from '../theme/theme'
+import { colors } from '../theme/theme'
 import { useState, useEffect, useRef } from 'react'
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter'
 
@@ -46,8 +46,8 @@ export const TaskBlock = ({
   // Calculate height based on duration (1 minute = 1.33px)
   const height = Math.max(50, task.durationMinutes * 1.33)
 
-  // Get background color from theme
-  const backgroundColor = getTaskColor(index)
+  // Get background color from task (assigned on creation)
+  const backgroundColor = task.color
 
   // Setup drag and drop
   useEffect(() => {
