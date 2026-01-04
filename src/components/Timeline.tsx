@@ -95,7 +95,7 @@ export const Timeline = () => {
   return (
     <Box
       sx={{
-        maxWidth: '600px',
+        maxWidth: '650px',
         margin: '0 auto',
         padding: '24px 16px',
       }}
@@ -143,28 +143,34 @@ export const Timeline = () => {
         ) : (
           tasks.map((task, index) => (
             <Box key={task.id}>
-              {/* Time label */}
-              <TimeLabel time={task.startTime} />
+              {/* Task row with time label on left */}
+              <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+                {/* Time label (left side) */}
+                <Box sx={{ minWidth: '90px', pt: '16px', textAlign: 'right' }}>
+                  <TimeLabel time={task.startTime} />
+                </Box>
 
-              {/* Task block */}
-              <Box
-                ref={(el) => {
-                  if (el) {
-                    taskRefs.current.set(task.id, el as any)
-                  } else {
-                    taskRefs.current.delete(task.id)
-                  }
-                }}
-              >
-                <TaskBlock
-                  task={task}
-                  index={index}
-                  onToggleLock={toggleLock}
-                  onDragStart={handleDragStart}
-                  onDragEnd={handleDragEnd}
-                  onDrop={handleDrop}
-                  isDragging={draggingTaskId === task.id}
-                />
+                {/* Task block (centered) */}
+                <Box
+                  ref={(el) => {
+                    if (el) {
+                      taskRefs.current.set(task.id, el as any)
+                    } else {
+                      taskRefs.current.delete(task.id)
+                    }
+                  }}
+                  sx={{ width: '400px' }}
+                >
+                  <TaskBlock
+                    task={task}
+                    index={index}
+                    onToggleLock={toggleLock}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDrop={handleDrop}
+                    isDragging={draggingTaskId === task.id}
+                  />
+                </Box>
               </Box>
 
               {/* Insertion point after this task */}
