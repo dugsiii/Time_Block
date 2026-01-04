@@ -111,7 +111,7 @@ export const TaskBlock = ({
           ? '2px solid #000000'
           : 'none',
         padding: '16px',
-        marginBottom: '12px',
+        marginBottom: '8px',
         minHeight: `${height}px`,
         cursor: task.isLocked ? 'not-allowed' : isBeingDragged ? 'grabbing' : 'grab',
         opacity: isBeingDragged ? 0.85 : isDragging ? 0.85 : isPreview ? 0.6 : 1,

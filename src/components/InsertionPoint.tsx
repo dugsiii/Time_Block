@@ -22,23 +22,27 @@ export const InsertionPoint = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       sx={{
-        height: '40px',
+        height: '0px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         opacity: isHovered || isActive ? 1 : 0,
         transition: 'opacity 150ms ease',
         cursor: 'pointer',
+        position: 'relative',
+        zIndex: 10,
       }}
     >
       <IconButton
         onClick={onClick}
         sx={{
-          width: '32px',
-          height: '32px',
+          width: '24px',
+          height: '24px',
           backgroundColor: '#FFFFFF',
-          border: '2px solid #000000',
+          border: '1.5px solid #000000',
           transition: 'all 200ms ease',
+          padding: 0,
+          minWidth: 'unset',
           '&:hover': {
             backgroundColor: '#000000',
             '& .MuiSvgIcon-root': {
@@ -49,7 +53,7 @@ export const InsertionPoint = ({
       >
         <AddIcon
           sx={{
-            fontSize: '20px',
+            fontSize: '16px',
             color: '#000000',
             transition: 'color 200ms ease',
           }}
