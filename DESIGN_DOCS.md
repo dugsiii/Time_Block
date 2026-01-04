@@ -292,15 +292,18 @@ interface TaskStore {
   dragConfig: { swapThreshold: number }
 
   // Actions
-  addTask: (task: Task) => void
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'color'>) => void
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
-  insertTask: (afterTaskId: string | null, task: Task) => void
+  insertTask: (afterTaskId: string | null, task: Omit<Task, 'id' | 'createdAt' | 'order' | 'color'>) => void
   swapTasks: (taskId1: string, taskId2: string) => void
   pushTask: (draggedTaskId: string, targetTaskId: string) => void
   toggleLock: (taskId: string) => void
   setSwapThreshold: (threshold: number) => void
 }
+
+// Note: 'color' is auto-assigned on task creation based on total task count
+// It persists with the task through reordering operations
 ```
 
 #### LocalStorage
@@ -317,7 +320,8 @@ interface TaskStore {
 - Auto-save to localStorage on every state update
 - Load from localStorage on app initialization
 - Store tasks array as JSON
-- Future: Add version field for migration handling
+- Migration: Tasks without 'color' field get assigned one on load (backwards compatibility)
+- Date serialization: Convert Date objects to/from ISO strings
 
 ---
 
@@ -349,7 +353,9 @@ taskColors = [
   '#66BB6A',  // Green 5: Forest green (richest)
 ]
 
-/* Pattern: Task 0 = Green 1, Task 1 = Green 2, Task 5 = Green 1 (cycles) */
+/* Color Assignment: Assigned on task creation based on total task count */
+/* Color Persistence: Once assigned, color stays with the task even when reordered */
+/* Example: If you create 3 tasks, they get Green 1, 2, 3. When reordered, colors stay */
 /* Stored in theme.ts for easy customization */
 ```
 
@@ -383,11 +389,11 @@ Buttons: 15px, weight 500 (medium)
 
 #### Normal State
 ```css
-Background: Alternating green (from taskColors array)
+Background: Green from task.color (assigned on creation, persists through reordering)
 Border: None (spacing provides separation)
 Border Radius: 8px (soft, rounded corners)
 Padding: 16px (comfortable internal spacing)
-Margin Bottom: 12px (clear gap between tasks)
+Margin Bottom: 8px (compact gap between tasks)
 Box Shadow: None (clean, flat)
 ```
 
@@ -426,11 +432,17 @@ Background: Same green
 
 #### Insertion [+] Button
 ```css
-/* Normal */
-Size: 32px × 32px circle
+/* Container */
+Height: 0px (overlaps task blocks, no vertical space)
+Position: Relative, z-index: 10 (sits above task blocks)
+Opacity: 0 (hidden), 1 on hover
+
+/* Button */
+Size: 24px × 24px circle (compact)
 Background: #FFFFFF (white)
-Border: 2px solid #000000 (black)
-Icon: #000000 (black), 20px
+Border: 1.5px solid #000000 (black, thinner for delicate look)
+Icon: #000000 (black), 16px
+Padding: 0 (exact size control)
 
 /* Hover */
 Background: #000000 (inverted - black)
@@ -465,17 +477,23 @@ Border Color: #000000 (black)
 
 #### Timeline Container
 ```css
-Width: 600px (desktop)
+Width: 650px (desktop - accommodates time labels + task blocks)
 Max Width: 100% (mobile responsive)
 Margin: 0 auto (centered)
 Padding: 24px 16px
 Background: #FFFFFF (pure white)
+
+/* Two-Column Layout */
+Layout: Flex row with gap: 24px
+- Left Column: Time labels (90px wide, right-aligned)
+- Right Column: Task blocks (400px fixed width)
+- Alignment: Time labels aligned with top of task blocks (pt: 16px)
 ```
 
 #### Task Spacing
 ```css
-Gap Between Tasks: 12px (clear visual separation)
-Insertion Point Height: 40px (hoverable area)
+Gap Between Tasks: 8px (compact visual separation)
+Insertion Point Height: 0px (overlaps task blocks, no vertical space)
 Task Minimum Height: 50px (even for short tasks)
 Task Height Formula: durationMinutes * 1.33px (e.g., 60min = 80px)
 ```
@@ -565,12 +583,13 @@ Touch targets: Minimum 44px height
 interface Task {
   id: string              // Unique identifier (crypto.randomUUID())
   title: string           // User-entered task name (required)
-  durationMinutes: number // Task duration (5, 15, 30, 60, 90, etc.)
+  durationMinutes: number // Task duration (any value >= 1, no constraints)
   startTime: Date         // Calculated start time (NOT optional)
   isLocked: boolean       // Lock state (prevents movement)
   order: number           // Position in task list (for sorting)
   isOverlapping: boolean  // Flagged when overlapping with locked tasks
   createdAt: Date         // Metadata for sorting
+  color: string           // Background color (assigned on creation, persists)
 }
 
 interface DragConfig {
@@ -588,10 +607,11 @@ interface AppState {
 
 - **id:** Required for React keys and CRUD operations
 - **title:** Always required, never empty
-- **durationMinutes:** Number for arithmetic (time calculations, block heights)
+- **durationMinutes:** Number for arithmetic (time calculations, block heights), any value >= 1
 - **startTime:** Always has a value (no optional "unscheduled" state)
 - **isLocked:** Default false, toggleable via lock icon
 - **order:** Explicit ordering (0, 1, 2...) for maintaining sequence
+- **color:** Assigned on creation based on task count, persists through reordering
 - **isOverlapping:** Flag for visual warning state (translucent + red pulse)
 - **createdAt:** Metadata, useful for default sorting
 
@@ -669,6 +689,9 @@ src/
 - Appears when [+] clicked
 - MUI TextField for title (autofocus)
 - MUI TextField for duration (number input, default 30 minutes)
+  - Min: 1 minute (flexible, allows any duration)
+  - Step: 1 minute (no 15-minute constraint)
+  - Allows arbitrary durations (e.g., 7 minutes, 23 minutes, 100 minutes)
 - Submit button (or Enter key)
 - Cancel button (or Escape key)
 - Compact, inline design
