@@ -2,6 +2,7 @@ import { Card, Typography, IconButton, Box } from '@mui/material'
 import LockIcon from '@mui/icons-material/Lock'
 import LockOpenIcon from '@mui/icons-material/LockOpen'
 import WarningIcon from '@mui/icons-material/Warning'
+import DeleteIcon from '@mui/icons-material/Delete'
 import { Task } from '../types'
 import { formatDuration } from '../utils/timeCalculations'
 import { colors } from '../theme/theme'
@@ -12,6 +13,7 @@ interface TaskBlockProps {
   task: Task
   index: number
   onToggleLock: (taskId: string) => void
+  onDelete: (taskId: string) => void
   onDragStart?: (taskId: string) => void
   onDragEnd?: () => void
   onDrop?: (draggedTaskId: string, targetTaskId: string, dropY: number) => void
@@ -32,6 +34,7 @@ export const TaskBlock = ({
   task,
   index,
   onToggleLock,
+  onDelete,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -199,6 +202,25 @@ export const TaskBlock = ({
             }}
           />
         )}
+
+        {/* Delete Icon - appears on hover */}
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete(task.id)
+          }}
+          sx={{
+            opacity: isHovered ? 1 : 0,
+            transition: 'opacity 150ms ease',
+            padding: '4px',
+            '&:hover': {
+              backgroundColor: 'rgba(239, 83, 80, 0.1)',
+            },
+          }}
+        >
+          <DeleteIcon sx={{ fontSize: '18px', color: '#EF5350' }} />
+        </IconButton>
 
         {/* Lock/Unlock Icon */}
         <IconButton

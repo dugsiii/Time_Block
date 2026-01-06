@@ -20,6 +20,7 @@ import { getDragAction } from '../utils/dragLogic'
 export const Timeline = () => {
   const tasks = useTaskStore((state) => state.tasks)
   const insertTask = useTaskStore((state) => state.insertTask)
+  const deleteTask = useTaskStore((state) => state.deleteTask)
   const toggleLock = useTaskStore((state) => state.toggleLock)
   const swapTasks = useTaskStore((state) => state.swapTasks)
   const pushTask = useTaskStore((state) => state.pushTask)
@@ -177,6 +178,7 @@ export const Timeline = () => {
                     task={task}
                     index={index}
                     onToggleLock={toggleLock}
+                    onDelete={deleteTask}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     onDrop={handleDrop}
