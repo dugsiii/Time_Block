@@ -6,10 +6,14 @@ const STORAGE_KEY = 'time-block-app-tasks'
 /**
  * Save tasks to localStorage
  * Handles Date serialization by converting to ISO strings
+ * Removes temporary fields like `isNew` before saving
  */
 export const saveTasksToStorage = (tasks: Task[]): void => {
   try {
-    const serialized = JSON.stringify(tasks, (key, value) => {
+    // Remove temporary fields before saving
+    const tasksToSave = tasks.map(({ isNew, ...task }) => task)
+
+    const serialized = JSON.stringify(tasksToSave, (key, value) => {
       // Convert Date objects to ISO strings for storage
       if (value instanceof Date) {
         return value.toISOString()

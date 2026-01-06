@@ -177,3 +177,40 @@ export const detectOverlaps = (tasks: Task[]): Task[] => {
 export const reorderTasks = (tasks: Task[]): Task[] => {
   return tasks.map((task, index) => ({ ...task, order: index }))
 }
+
+/**
+ * Move a task to the end of the task list
+ * This allows moving tasks below locked tasks when there's no drop target after them
+ */
+export const moveTaskToEnd = (
+  tasks: Task[],
+  draggedTaskId: string
+): Task[] | null => {
+  const draggedTask = tasks.find((t) => t.id === draggedTaskId)
+
+  if (!draggedTask) return null
+  if (draggedTask.isLocked) return null // Can't move locked tasks
+
+  // Get the current max order
+  const maxOrder = Math.max(...tasks.map((t) => t.order))
+
+  // If task is already at the end, no change needed
+  if (draggedTask.order === maxOrder) return null
+
+  // Move dragged task to end, shift other tasks up
+  const draggedOrder = draggedTask.order
+
+  const reorderedTasks = tasks.map((task) => {
+    if (task.id === draggedTaskId) {
+      // Dragged task goes to the end
+      return { ...task, order: maxOrder }
+    } else if (task.order > draggedOrder) {
+      // Tasks after the dragged task shift up by 1
+      return { ...task, order: task.order - 1 }
+    }
+    return task
+  })
+
+  // Recalculate times based on new order
+  return recalculateTaskTimes(reorderedTasks)
+}

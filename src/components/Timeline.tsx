@@ -5,6 +5,7 @@ import { TaskBlock } from './TaskBlock'
 import { InsertionPoint } from './InsertionPoint'
 import { InlineTaskForm } from './InlineTaskForm'
 import { TimeLabel } from './TimeLabel'
+import { EndZoneDropTarget } from './EndZoneDropTarget'
 import { generateTimeLabels, getVisibleTimeRange } from '../utils/timeCalculations'
 import { getDragAction } from '../utils/dragLogic'
 
@@ -19,9 +20,11 @@ import { getDragAction } from '../utils/dragLogic'
 export const Timeline = () => {
   const tasks = useTaskStore((state) => state.tasks)
   const insertTask = useTaskStore((state) => state.insertTask)
+  const deleteTask = useTaskStore((state) => state.deleteTask)
   const toggleLock = useTaskStore((state) => state.toggleLock)
   const swapTasks = useTaskStore((state) => state.swapTasks)
   const pushTask = useTaskStore((state) => state.pushTask)
+  const moveToEnd = useTaskStore((state) => state.moveToEnd)
   const dragConfig = useTaskStore((state) => state.dragConfig)
 
   const [activeInsertionPoint, setActiveInsertionPoint] = useState<string | null>(null)
@@ -31,6 +34,10 @@ export const Timeline = () => {
   // Calculate visible time range
   const { start, end } = getVisibleTimeRange(tasks)
   const timeLabels = generateTimeLabels(start, end)
+
+  // Check if the last task is locked (for showing end zone drop target)
+  const lastTask = tasks[tasks.length - 1]
+  const hasLockedTaskAtEnd = lastTask?.isLocked ?? false
 
   const handleInsertTask = (afterTaskId: string | null, title: string, durationMinutes: number) => {
     insertTask(afterTaskId, {
@@ -52,6 +59,12 @@ export const Timeline = () => {
   }
 
   const handleDragEnd = () => {
+    setDraggingTaskId(null)
+  }
+
+  const handleMoveToEnd = (taskId: string) => {
+    console.log('Move to end:', taskId)
+    moveToEnd(taskId)
     setDraggingTaskId(null)
   }
 
@@ -113,19 +126,27 @@ export const Timeline = () => {
       {/* Timeline */}
       <Box>
         {/* Insertion point at the beginning */}
-        {activeInsertionPoint === 'start' ? (
-          <InlineTaskForm
-            onSubmit={(title, duration) => handleInsertTask(null, title, duration)}
-            onCancel={handleCancelInsert}
-          />
-        ) : (
-          <InsertionPoint
-            onClick={() => setActiveInsertionPoint('start')}
-            isActive={activeInsertionPoint === 'start'}
-          />
-        )}
+        <Box sx={{ display: 'flex', gap: 3 }}>
+          {/* Empty space for time label alignment */}
+          <Box sx={{ minWidth: '90px' }} />
+          
+          {/* Insertion point / form */}
+          <Box sx={{ width: '400px' }}>
+            {activeInsertionPoint === 'start' ? (
+              <InlineTaskForm
+                onSubmit={(title, duration) => handleInsertTask(null, title, duration)}
+                onCancel={handleCancelInsert}
+              />
+            ) : (
+              <InsertionPoint
+                onClick={() => setActiveInsertionPoint('start')}
+                isActive={activeInsertionPoint === 'start'}
+              />
+            )}
+          </Box>
+        </Box>
 
-        {/* Tasks with time labels and insertion points */}
+        {/* Tasks with time labels */}
         {tasks.length === 0 ? (
           <Box
             sx={{
@@ -144,7 +165,15 @@ export const Timeline = () => {
           tasks.map((task, index) => (
             <Box key={task.id}>
               {/* Task row with time label on left */}
-              <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  gap: 3, 
+                  alignItems: 'flex-start',
+                  // Smooth transition when tasks shift
+                  transition: 'transform 250ms ease-out, margin 250ms ease-out',
+                }}
+              >
                 {/* Time label (left side) */}
                 <Box sx={{ minWidth: '90px', pt: '16px', textAlign: 'right' }}>
                   <TimeLabel time={task.startTime} />
@@ -165,6 +194,7 @@ export const Timeline = () => {
                     task={task}
                     index={index}
                     onToggleLock={toggleLock}
+                    onDelete={deleteTask}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     onDrop={handleDrop}
@@ -173,20 +203,36 @@ export const Timeline = () => {
                 </Box>
               </Box>
 
-              {/* Insertion point after this task */}
-              {activeInsertionPoint === task.id ? (
-                <InlineTaskForm
-                  onSubmit={(title, duration) => handleInsertTask(task.id, title, duration)}
-                  onCancel={handleCancelInsert}
-                />
-              ) : (
-                <InsertionPoint
-                  onClick={() => setActiveInsertionPoint(task.id)}
-                  isActive={activeInsertionPoint === task.id}
-                />
-              )}
+              {/* Insertion point AFTER this task */}
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                {/* Empty space for time label alignment */}
+                <Box sx={{ minWidth: '90px' }} />
+                
+                {/* Insertion point / form */}
+                <Box sx={{ width: '400px' }}>
+                  {activeInsertionPoint === task.id ? (
+                    <InlineTaskForm
+                      onSubmit={(title, duration) => handleInsertTask(task.id, title, duration)}
+                      onCancel={handleCancelInsert}
+                    />
+                  ) : (
+                    <InsertionPoint
+                      onClick={() => setActiveInsertionPoint(task.id)}
+                      isActive={activeInsertionPoint === task.id}
+                    />
+                  )}
+                </Box>
+              </Box>
             </Box>
           ))
+        )}
+
+        {/* End zone drop target - shown when dragging, especially useful when last task is locked */}
+        {tasks.length > 0 && (
+          <EndZoneDropTarget
+            onDrop={handleMoveToEnd}
+            hasLockedTaskAtEnd={hasLockedTaskAtEnd}
+          />
         )}
       </Box>
 
@@ -194,7 +240,7 @@ export const Timeline = () => {
       {tasks.length > 0 && (
         <Box sx={{ mt: 3, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-            Phase 3 Complete: UI Components ready! Drag-and-drop coming in Phase 4.
+            Tip: Create tasks with [+] at top, then drag to reorder
           </Typography>
         </Box>
       )}

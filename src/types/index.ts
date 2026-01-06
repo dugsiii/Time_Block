@@ -11,6 +11,7 @@ export interface Task {
   isOverlapping: boolean // Flagged when overlapping with locked tasks
   createdAt: Date // Metadata for sorting
   color: string // Background color (assigned on creation, persists through reordering)
+  isNew?: boolean // Temporary flag for highlighting newly created tasks
 }
 
 /**
@@ -53,6 +54,7 @@ export interface TaskStore extends AppState {
   insertTask: (afterTaskId: string | null, task: Omit<Task, 'id' | 'createdAt' | 'order' | 'color'>) => void
   swapTasks: (taskId1: string, taskId2: string) => void
   pushTask: (draggedTaskId: string, targetTaskId: string) => void
+  moveToEnd: (taskId: string) => void
 
   // State management
   toggleLock: (taskId: string) => void

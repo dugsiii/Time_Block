@@ -17,3 +17,52 @@ body {
   width: 100%;
   min-height: 100vh;
 }
+
+/* Task shift animations */
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* New task insertion animation */
+.task-enter {
+  animation: fadeIn 300ms ease-out;
+}
+
+/* Smooth position transitions for task blocks */
+.task-block-wrapper {
+  transition: transform 250ms ease-out, margin 250ms ease-out;
+}
+
+/* Insertion point fade transition */
+.insertion-point-wrapper {
+  transition: opacity 200ms ease, height 200ms ease;
+}
