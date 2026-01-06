@@ -11,6 +11,7 @@ export interface Task {
   isOverlapping: boolean // Flagged when overlapping with locked tasks
   createdAt: Date // Metadata for sorting
   color: string // Background color (assigned on creation, persists through reordering)
+  isNew?: boolean // Temporary flag for highlighting newly created tasks
 }
 
 /**

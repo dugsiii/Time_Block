@@ -4,7 +4,7 @@ import {
   saveTasksToStorage,
   loadTasksFromStorage,
 } from '../utils/storage'
-import { recalculateTaskTimes } from '../utils/timeCalculations'
+import { recalculateTaskTimes, findNextAvailableSlot } from '../utils/timeCalculations'
 import {
   executeSwap,
   executePush,
@@ -78,29 +78,45 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
   // Task Operations
 
   /**
-   * Insert a new task after a specific task (or at beginning if null)
+   * Insert a new task - finds the next available slot that respects locked tasks
+   * The afterTaskId parameter is now used as a hint, but the actual insertion
+   * position is calculated based on available slots
    */
   insertTask: (afterTaskId, taskData) => {
-    const currentTaskCount = get().tasks.length
+    const currentTasks = get().tasks
+    const currentTaskCount = currentTasks.length
+
+    // Find the next available slot for the new task
+    const { slotStart, insertAfterTaskId } = findNextAvailableSlot(
+      currentTasks,
+      taskData.durationMinutes
+    )
+
     const newTask: Task = {
       ...taskData,
       id: crypto.randomUUID(),
       createdAt: new Date(),
       order: 0, // Will be recalculated
-      startTime: new Date(), // Will be recalculated
-      color: taskColors[currentTaskCount % taskColors.length], // Assign color based on current count
-    }
+      startTime: slotStart, // Set to the found slot
+      color: taskColors[currentTaskCount % taskColors.length],
+      isNew: true, // Flag for highlighting - will be removed after render
+    } as Task & { isNew?: boolean }
 
     let updatedTasks: Task[]
 
-    if (afterTaskId === null) {
+    if (insertAfterTaskId === null) {
       // Insert at beginning
-      updatedTasks = [newTask, ...get().tasks]
+      updatedTasks = [newTask, ...currentTasks]
     } else {
-      // Insert after specific task
-      const afterIndex = get().tasks.findIndex((t) => t.id === afterTaskId)
-      updatedTasks = [...get().tasks]
-      updatedTasks.splice(afterIndex + 1, 0, newTask)
+      // Insert after the task that ends before the slot
+      const afterIndex = currentTasks.findIndex((t) => t.id === insertAfterTaskId)
+      if (afterIndex >= 0) {
+        updatedTasks = [...currentTasks]
+        updatedTasks.splice(afterIndex + 1, 0, newTask)
+      } else {
+        // Fallback: add at end
+        updatedTasks = [...currentTasks, newTask]
+      }
     }
 
     const reordered = reorderTasks(updatedTasks)
@@ -109,6 +125,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
     set({ tasks: tasksWithOverlaps })
     saveTasksToStorage(tasksWithOverlaps)
+
+    // Return the new task ID for highlighting
+    return newTask.id
   },
 
   /**
