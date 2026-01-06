@@ -10,6 +10,7 @@ import {
   executePush,
   detectOverlaps,
   reorderTasks,
+  moveTaskToEnd,
 } from '../utils/dragLogic'
 import { taskColors } from '../theme/theme'
 
@@ -136,6 +137,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       saveTasksToStorage(tasksWithOverlaps)
     }
     // If result is null, operation failed (e.g., locked conflict) - do nothing
+  },
+
+  /**
+   * Move task to the end of the list (useful for moving past locked tasks)
+   */
+  moveToEnd: (taskId) => {
+    const result = moveTaskToEnd(get().tasks, taskId)
+
+    if (result) {
+      const tasksWithOverlaps = detectOverlaps(result)
+      set({ tasks: tasksWithOverlaps })
+      saveTasksToStorage(tasksWithOverlaps)
+    }
   },
 
   // State Management

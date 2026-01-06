@@ -5,6 +5,7 @@ import { TaskBlock } from './TaskBlock'
 import { InsertionPoint } from './InsertionPoint'
 import { InlineTaskForm } from './InlineTaskForm'
 import { TimeLabel } from './TimeLabel'
+import { EndZoneDropTarget } from './EndZoneDropTarget'
 import { generateTimeLabels, getVisibleTimeRange } from '../utils/timeCalculations'
 import { getDragAction } from '../utils/dragLogic'
 
@@ -22,6 +23,7 @@ export const Timeline = () => {
   const toggleLock = useTaskStore((state) => state.toggleLock)
   const swapTasks = useTaskStore((state) => state.swapTasks)
   const pushTask = useTaskStore((state) => state.pushTask)
+  const moveToEnd = useTaskStore((state) => state.moveToEnd)
   const dragConfig = useTaskStore((state) => state.dragConfig)
 
   const [activeInsertionPoint, setActiveInsertionPoint] = useState<string | null>(null)
@@ -31,6 +33,10 @@ export const Timeline = () => {
   // Calculate visible time range
   const { start, end } = getVisibleTimeRange(tasks)
   const timeLabels = generateTimeLabels(start, end)
+
+  // Check if the last task is locked (for showing end zone drop target)
+  const lastTask = tasks[tasks.length - 1]
+  const hasLockedTaskAtEnd = lastTask?.isLocked ?? false
 
   const handleInsertTask = (afterTaskId: string | null, title: string, durationMinutes: number) => {
     insertTask(afterTaskId, {
@@ -52,6 +58,12 @@ export const Timeline = () => {
   }
 
   const handleDragEnd = () => {
+    setDraggingTaskId(null)
+  }
+
+  const handleMoveToEnd = (taskId: string) => {
+    console.log('Move to end:', taskId)
+    moveToEnd(taskId)
     setDraggingTaskId(null)
   }
 
@@ -187,6 +199,14 @@ export const Timeline = () => {
               )}
             </Box>
           ))
+        )}
+
+        {/* End zone drop target - shown when dragging, especially useful when last task is locked */}
+        {tasks.length > 0 && (
+          <EndZoneDropTarget
+            onDrop={handleMoveToEnd}
+            hasLockedTaskAtEnd={hasLockedTaskAtEnd}
+          />
         )}
       </Box>
 
