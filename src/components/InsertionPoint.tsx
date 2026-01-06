@@ -26,7 +26,7 @@ export const InsertionPoint = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: isHovered || isActive ? 1 : 0,
+        opacity: isHovered || isActive ? 1 : 0.35,
         transition: 'opacity 150ms ease',
         cursor: 'pointer',
         position: 'relative',
