@@ -137,7 +137,7 @@ export const Timeline = () => {
           />
         )}
 
-        {/* Tasks with time labels and insertion points */}
+        {/* Tasks with time labels */}
         {tasks.length === 0 ? (
           <Box
             sx={{
@@ -184,19 +184,6 @@ export const Timeline = () => {
                   />
                 </Box>
               </Box>
-
-              {/* Insertion point after this task */}
-              {activeInsertionPoint === task.id ? (
-                <InlineTaskForm
-                  onSubmit={(title, duration) => handleInsertTask(task.id, title, duration)}
-                  onCancel={handleCancelInsert}
-                />
-              ) : (
-                <InsertionPoint
-                  onClick={() => setActiveInsertionPoint(task.id)}
-                  isActive={activeInsertionPoint === task.id}
-                />
-              )}
             </Box>
           ))
         )}
@@ -214,7 +201,7 @@ export const Timeline = () => {
       {tasks.length > 0 && (
         <Box sx={{ mt: 3, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-            Phase 3 Complete: UI Components ready! Drag-and-drop coming in Phase 4.
+            Tip: Create tasks with [+] at top, then drag to reorder
           </Typography>
         </Box>
       )}
