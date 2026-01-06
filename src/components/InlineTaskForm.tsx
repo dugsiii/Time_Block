@@ -1,6 +1,6 @@
 import { Box, TextField, Button, Typography } from '@mui/material'
 import { useState, useEffect, useRef } from 'react'
-import { roundDurationUp } from '../utils/timeCalculations'
+import { roundDurationUp, formatDuration } from '../utils/timeCalculations'
 
 interface InlineTaskFormProps {
   onSubmit: (title: string, durationMinutes: number) => void
@@ -14,7 +14,8 @@ interface InlineTaskFormProps {
  * - Autofocus on title input
  * - Enter to submit, Escape to cancel
  * - Default duration: 30 minutes
- * - Duration is rounded up to nearest 15 minutes
+ * - Duration is rounded up to nearest 15 minutes (shown dynamically)
+ * - Accepts any duration value, shows conversion before submission
  */
 export const InlineTaskForm = ({
   onSubmit,
@@ -26,6 +27,7 @@ export const InlineTaskForm = ({
 
   // Calculate rounded duration for display
   const roundedDuration = roundDurationUp(duration)
+  const willBeRounded = duration > 0 && duration !== roundedDuration
 
   // Autofocus on mount
   useEffect(() => {
@@ -90,14 +92,43 @@ export const InlineTaskForm = ({
           onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
           inputProps={{
             min: 1,
-            step: 15,
+            // No step restriction - allow any value
           }}
-          helperText={
-            duration !== roundedDuration
-              ? `Rounds up to ${roundedDuration} min (15-min intervals)`
-              : 'Duration in 15-minute intervals'
-          }
         />
+      </Box>
+
+      {/* Dynamic rounded duration indicator */}
+      <Box
+        sx={{
+          mb: 1.5,
+          p: 1,
+          backgroundColor: willBeRounded ? '#E3F2FD' : '#E8F5E9',
+          borderRadius: '6px',
+          border: willBeRounded ? '1px solid #90CAF9' : '1px solid #A5D6A7',
+          transition: 'all 200ms ease',
+        }}
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            fontSize: '12px',
+            color: willBeRounded ? '#1565C0' : '#2E7D32',
+            fontWeight: 500,
+            textAlign: 'center',
+          }}
+        >
+          {duration < 1 ? (
+            'Enter a duration (minimum 1 minute)'
+          ) : willBeRounded ? (
+            <>
+              {duration} min → <strong>{formatDuration(roundedDuration)}</strong> (rounded to 15-min interval)
+            </>
+          ) : (
+            <>
+              Duration: <strong>{formatDuration(roundedDuration)}</strong> ✓
+            </>
+          )}
+        </Typography>
       </Box>
 
       <Box sx={{ display: 'flex', gap: 1 }}>

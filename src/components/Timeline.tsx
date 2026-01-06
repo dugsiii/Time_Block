@@ -126,17 +126,25 @@ export const Timeline = () => {
       {/* Timeline */}
       <Box>
         {/* Insertion point at the beginning */}
-        {activeInsertionPoint === 'start' ? (
-          <InlineTaskForm
-            onSubmit={(title, duration) => handleInsertTask(null, title, duration)}
-            onCancel={handleCancelInsert}
-          />
-        ) : (
-          <InsertionPoint
-            onClick={() => setActiveInsertionPoint('start')}
-            isActive={activeInsertionPoint === 'start'}
-          />
-        )}
+        <Box sx={{ display: 'flex', gap: 3 }}>
+          {/* Empty space for time label alignment */}
+          <Box sx={{ minWidth: '90px' }} />
+          
+          {/* Insertion point / form */}
+          <Box sx={{ width: '400px' }}>
+            {activeInsertionPoint === 'start' ? (
+              <InlineTaskForm
+                onSubmit={(title, duration) => handleInsertTask(null, title, duration)}
+                onCancel={handleCancelInsert}
+              />
+            ) : (
+              <InsertionPoint
+                onClick={() => setActiveInsertionPoint('start')}
+                isActive={activeInsertionPoint === 'start'}
+              />
+            )}
+          </Box>
+        </Box>
 
         {/* Tasks with time labels */}
         {tasks.length === 0 ? (
@@ -157,7 +165,15 @@ export const Timeline = () => {
           tasks.map((task, index) => (
             <Box key={task.id}>
               {/* Task row with time label on left */}
-              <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  gap: 3, 
+                  alignItems: 'flex-start',
+                  // Smooth transition when tasks shift
+                  transition: 'transform 250ms ease-out, margin 250ms ease-out',
+                }}
+              >
                 {/* Time label (left side) */}
                 <Box sx={{ minWidth: '90px', pt: '16px', textAlign: 'right' }}>
                   <TimeLabel time={task.startTime} />
@@ -184,6 +200,27 @@ export const Timeline = () => {
                     onDrop={handleDrop}
                     isDragging={draggingTaskId === task.id}
                   />
+                </Box>
+              </Box>
+
+              {/* Insertion point AFTER this task */}
+              <Box sx={{ display: 'flex', gap: 3 }}>
+                {/* Empty space for time label alignment */}
+                <Box sx={{ minWidth: '90px' }} />
+                
+                {/* Insertion point / form */}
+                <Box sx={{ width: '400px' }}>
+                  {activeInsertionPoint === task.id ? (
+                    <InlineTaskForm
+                      onSubmit={(title, duration) => handleInsertTask(task.id, title, duration)}
+                      onCancel={handleCancelInsert}
+                    />
+                  ) : (
+                    <InsertionPoint
+                      onClick={() => setActiveInsertionPoint(task.id)}
+                      isActive={activeInsertionPoint === task.id}
+                    />
+                  )}
                 </Box>
               </Box>
             </Box>
