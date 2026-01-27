@@ -4,6 +4,7 @@ import {
   saveTasksToStorage,
   loadTasksFromStorage,
 } from '../utils/storage'
+import { dateKeyToDate } from '../utils/date'
 import { recalculateTaskTimes, findNextAvailableSlot } from '../utils/timeCalculations'
 import {
   executeSwap,
@@ -20,9 +21,15 @@ import { taskColors } from '../theme/theme'
  */
 export const useTaskStore = create<TaskStore>((set, get) => ({
   // Initial state
-  tasks: loadTasksFromStorage(),
+  ...loadTasksFromStorage(),
   dragConfig: {
     swapThreshold: 0.5, // 50% into target task triggers SWAP
+  },
+
+  // Date navigation
+  setSelectedDateKey: (dateKey) => {
+    set({ selectedDateKey: dateKey })
+    saveTasksToStorage(get().tasksByDate, dateKey)
   },
 
   // CRUD Operations
@@ -31,7 +38,9 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * Add a new task
    */
   addTask: (taskData) => {
-    const currentTaskCount = get().tasks.length
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
+    const currentTaskCount = currentTasks.length
     const newTask: Task = {
       ...taskData,
       id: crypto.randomUUID(),
@@ -40,39 +49,49 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       color: taskColors[currentTaskCount % taskColors.length], // Assign color based on current count
     }
 
-    const updatedTasks = recalculateTaskTimes([...get().tasks, newTask])
+    const baseDate = dateKeyToDate(selectedDateKey)
+    const updatedTasks = recalculateTaskTimes([...currentTasks, newTask], baseDate)
     const tasksWithOverlaps = detectOverlaps(updatedTasks)
 
-    set({ tasks: tasksWithOverlaps })
-    saveTasksToStorage(tasksWithOverlaps)
+    const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: tasksWithOverlaps }
+    set({ tasksByDate: nextTasksByDate })
+    saveTasksToStorage(nextTasksByDate, selectedDateKey)
   },
 
   /**
    * Update an existing task
    */
   updateTask: (id, updates) => {
-    const updatedTasks = get().tasks.map((task) =>
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
+    const updatedTasks = currentTasks.map((task) =>
       task.id === id ? { ...task, ...updates } : task
     )
 
-    const recalculated = recalculateTaskTimes(updatedTasks)
+    const baseDate = dateKeyToDate(selectedDateKey)
+    const recalculated = recalculateTaskTimes(updatedTasks, baseDate)
     const tasksWithOverlaps = detectOverlaps(recalculated)
 
-    set({ tasks: tasksWithOverlaps })
-    saveTasksToStorage(tasksWithOverlaps)
+    const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: tasksWithOverlaps }
+    set({ tasksByDate: nextTasksByDate })
+    saveTasksToStorage(nextTasksByDate, selectedDateKey)
   },
 
   /**
    * Delete a task
    */
   deleteTask: (id) => {
-    const filtered = get().tasks.filter((task) => task.id !== id)
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
+    const filtered = currentTasks.filter((task) => task.id !== id)
     const reordered = reorderTasks(filtered)
-    const recalculated = recalculateTaskTimes(reordered)
+    const baseDate = dateKeyToDate(selectedDateKey)
+    const recalculated = recalculateTaskTimes(reordered, baseDate)
     const tasksWithOverlaps = detectOverlaps(recalculated)
 
-    set({ tasks: tasksWithOverlaps })
-    saveTasksToStorage(tasksWithOverlaps)
+    const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: tasksWithOverlaps }
+    set({ tasksByDate: nextTasksByDate })
+    saveTasksToStorage(nextTasksByDate, selectedDateKey)
   },
 
   // Task Operations
@@ -83,13 +102,18 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * position is calculated based on available slots
    */
   insertTask: (_afterTaskId, taskData) => {
-    const currentTasks = get().tasks
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
     const currentTaskCount = currentTasks.length
+
+    const baseDate = dateKeyToDate(selectedDateKey)
 
     // Find the next available slot for the new task
     const { slotStart, insertAfterTaskId } = findNextAvailableSlot(
       currentTasks,
-      taskData.durationMinutes
+      taskData.durationMinutes,
+      baseDate,
+      _afterTaskId
     )
 
     const newTask: Task = {
@@ -120,11 +144,12 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
     }
 
     const reordered = reorderTasks(updatedTasks)
-    const recalculated = recalculateTaskTimes(reordered)
+    const recalculated = recalculateTaskTimes(reordered, baseDate)
     const tasksWithOverlaps = detectOverlaps(recalculated)
 
-    set({ tasks: tasksWithOverlaps })
-    saveTasksToStorage(tasksWithOverlaps)
+    const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: tasksWithOverlaps }
+    set({ tasksByDate: nextTasksByDate })
+    saveTasksToStorage(nextTasksByDate, selectedDateKey)
 
     // Return the new task ID for highlighting
     return newTask.id
@@ -134,12 +159,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * Swap two tasks (exchange positions)
    */
   swapTasks: (taskId1, taskId2) => {
-    const result = executeSwap(get().tasks, taskId1, taskId2)
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
+    const baseDate = dateKeyToDate(selectedDateKey)
+    const result = executeSwap(currentTasks, taskId1, taskId2, baseDate)
 
     if (result) {
       const tasksWithOverlaps = detectOverlaps(result)
-      set({ tasks: tasksWithOverlaps })
-      saveTasksToStorage(tasksWithOverlaps)
+      const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: tasksWithOverlaps }
+      set({ tasksByDate: nextTasksByDate })
+      saveTasksToStorage(nextTasksByDate, selectedDateKey)
     }
     // If result is null, operation failed (e.g., locked task) - do nothing
   },
@@ -148,12 +177,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * Push task to target position (dragged task takes target's spot)
    */
   pushTask: (draggedTaskId, targetTaskId) => {
-    const result = executePush(get().tasks, draggedTaskId, targetTaskId)
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
+    const baseDate = dateKeyToDate(selectedDateKey)
+    const result = executePush(currentTasks, draggedTaskId, targetTaskId, baseDate)
 
     if (result) {
       const tasksWithOverlaps = detectOverlaps(result)
-      set({ tasks: tasksWithOverlaps })
-      saveTasksToStorage(tasksWithOverlaps)
+      const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: tasksWithOverlaps }
+      set({ tasksByDate: nextTasksByDate })
+      saveTasksToStorage(nextTasksByDate, selectedDateKey)
     }
     // If result is null, operation failed (e.g., locked conflict) - do nothing
   },
@@ -162,12 +195,16 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * Move task to the end of the list (useful for moving past locked tasks)
    */
   moveToEnd: (taskId) => {
-    const result = moveTaskToEnd(get().tasks, taskId)
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
+    const baseDate = dateKeyToDate(selectedDateKey)
+    const result = moveTaskToEnd(currentTasks, taskId, baseDate)
 
     if (result) {
       const tasksWithOverlaps = detectOverlaps(result)
-      set({ tasks: tasksWithOverlaps })
-      saveTasksToStorage(tasksWithOverlaps)
+      const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: tasksWithOverlaps }
+      set({ tasksByDate: nextTasksByDate })
+      saveTasksToStorage(nextTasksByDate, selectedDateKey)
     }
   },
 
@@ -177,12 +214,15 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * Toggle lock state of a task
    */
   toggleLock: (taskId) => {
-    const updatedTasks = get().tasks.map((task) =>
+    const { selectedDateKey, tasksByDate } = get()
+    const currentTasks = tasksByDate[selectedDateKey] ?? []
+    const updatedTasks = currentTasks.map((task) =>
       task.id === taskId ? { ...task, isLocked: !task.isLocked } : task
     )
 
-    set({ tasks: updatedTasks })
-    saveTasksToStorage(updatedTasks)
+    const nextTasksByDate = { ...tasksByDate, [selectedDateKey]: updatedTasks }
+    set({ tasksByDate: nextTasksByDate })
+    saveTasksToStorage(nextTasksByDate, selectedDateKey)
   },
 
   /**

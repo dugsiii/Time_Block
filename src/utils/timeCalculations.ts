@@ -37,7 +37,7 @@ export const roundDurationUp = (minutes: number): number => {
  * RESPECTS LOCKED TASKS - they keep their start times
  * Unlocked tasks are scheduled around locked tasks
  */
-export const recalculateTaskTimes = (tasks: Task[]): Task[] => {
+export const recalculateTaskTimes = (tasks: Task[], baseDate: Date = new Date()): Task[] => {
   // Sort by order
   const sorted = [...tasks].sort((a, b) => a.order - b.order)
 
@@ -48,7 +48,7 @@ export const recalculateTaskTimes = (tasks: Task[]): Task[] => {
   if (sorted.length === 0) return []
 
   // Start at 8:00 AM
-  const startOfDay = new Date()
+  const startOfDay = new Date(baseDate)
   startOfDay.setHours(8, 0, 0, 0)
 
   let currentTime = new Date(startOfDay)
@@ -124,10 +124,12 @@ export const recalculateTaskTimes = (tasks: Task[]): Task[] => {
  */
 export const findNextAvailableSlot = (
   tasks: Task[],
-  durationMinutes: number
+  durationMinutes: number,
+  baseDate: Date = new Date(),
+  afterTaskId: string | null = null
 ): { slotStart: Date; insertAfterTaskId: string | null } => {
   // Start at 8:00 AM
-  const startOfDay = new Date()
+  const startOfDay = new Date(baseDate)
   startOfDay.setHours(8, 0, 0, 0)
 
   if (tasks.length === 0) {
@@ -142,9 +144,18 @@ export const findNextAvailableSlot = (
   // Get locked tasks for conflict checking
   const lockedTasks = tasks.filter((t) => t.isLocked)
 
-  // Try to find a slot starting from 8 AM
+  // Try to find a slot starting from the hinted insertion point
+  // If afterTaskId is provided, start right after that task's end time.
   let proposedStart = new Date(startOfDay)
-  const endOfDay = new Date()
+  if (afterTaskId) {
+    const hintTask = tasks.find((t) => t.id === afterTaskId)
+    if (hintTask) {
+      proposedStart = new Date(
+        hintTask.startTime.getTime() + hintTask.durationMinutes * 60000
+      )
+    }
+  }
+  const endOfDay = new Date(baseDate)
   endOfDay.setHours(23, 59, 0, 0)
 
   while (proposedStart < endOfDay) {
@@ -174,6 +185,11 @@ export const findNextAvailableSlot = (
           insertAfterTaskId = task.id
           break
         }
+      }
+
+      // If caller provided a hint and we started after it, preserve it when possible.
+      if (afterTaskId && insertAfterTaskId === null) {
+        insertAfterTaskId = afterTaskId
       }
 
       // If slot is before all tasks, insert at beginning

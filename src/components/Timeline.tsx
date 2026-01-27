@@ -10,6 +10,7 @@ import { getDragAction } from '../utils/dragLogic'
 import AddIcon from '@mui/icons-material/Add'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
+import { addDays, dateKeyToDate, getLocalDateKey } from '../utils/date'
 
 /**
  * Timeline component - main container for the time blocking interface
@@ -20,7 +21,10 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
  * - Auto-calculates visible time range
  */
 export const Timeline = () => {
-  const tasks = useTaskStore((state) => state.tasks)
+  const selectedDateKey = useTaskStore((state) => state.selectedDateKey)
+  const tasksByDate = useTaskStore((state) => state.tasksByDate)
+  const setSelectedDateKey = useTaskStore((state) => state.setSelectedDateKey)
+  const tasks = tasksByDate[selectedDateKey] ?? []
   const insertTask = useTaskStore((state) => state.insertTask)
   const deleteTask = useTaskStore((state) => state.deleteTask)
   const toggleLock = useTaskStore((state) => state.toggleLock)
@@ -108,8 +112,10 @@ export const Timeline = () => {
     setDraggingTaskId(null)
   }
 
-  const currentDate = new Date()
-  const dateLabel = currentDate.toLocaleDateString(undefined, {
+  const selectedDate = dateKeyToDate(selectedDateKey)
+  const todayKey = getLocalDateKey(new Date())
+  const isToday = selectedDateKey === todayKey
+  const dateLabel = selectedDate.toLocaleDateString(undefined, {
     weekday: 'long',
     month: 'short',
     day: 'numeric',
@@ -166,7 +172,28 @@ export const Timeline = () => {
           color: 'text.secondary',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={() => setSelectedDateKey(addDays(selectedDateKey, -1))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              setSelectedDateKey(addDays(selectedDateKey, -1))
+            }
+          }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            cursor: 'pointer',
+            userSelect: 'none',
+            px: 1,
+            py: 0.5,
+            borderRadius: 999,
+            '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' },
+          }}
+        >
           <ChevronLeftIcon sx={{ fontSize: 18, opacity: 0.6 }} />
           <Typography variant="body2" sx={{ fontSize: 14, opacity: 0.75 }}>
             Yesterday
@@ -174,10 +201,31 @@ export const Timeline = () => {
         </Box>
 
         <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>
-          {dateLabel}
+          {isToday ? `Today · ${dateLabel}` : dateLabel}
         </Typography>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Box
+          role="button"
+          tabIndex={0}
+          onClick={() => setSelectedDateKey(addDays(selectedDateKey, 1))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault()
+              setSelectedDateKey(addDays(selectedDateKey, 1))
+            }
+          }}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            cursor: 'pointer',
+            userSelect: 'none',
+            px: 1,
+            py: 0.5,
+            borderRadius: 999,
+            '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' },
+          }}
+        >
           <Typography variant="body2" sx={{ fontSize: 14, opacity: 0.75 }}>
             Tomorrow
           </Typography>

@@ -25,7 +25,8 @@ export interface DragConfig {
  * Application state interface
  */
 export interface AppState {
-  tasks: Task[]
+  selectedDateKey: string
+  tasksByDate: Record<string, Task[]>
   dragConfig: DragConfig
 }
 
@@ -45,13 +46,19 @@ export interface DragPreview {
  * Zustand store interface
  */
 export interface TaskStore extends AppState {
+  // Date navigation
+  setSelectedDateKey: (dateKey: string) => void
+
   // CRUD operations
   addTask: (task: Omit<Task, 'id' | 'createdAt' | 'color'>) => void
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
 
   // Task operations
-  insertTask: (afterTaskId: string | null, task: Omit<Task, 'id' | 'createdAt' | 'order' | 'color'>) => void
+  insertTask: (
+    afterTaskId: string | null,
+    task: Omit<Task, 'id' | 'createdAt' | 'order' | 'color'>
+  ) => void
   swapTasks: (taskId1: string, taskId2: string) => void
   pushTask: (draggedTaskId: string, targetTaskId: string) => void
   moveToEnd: (taskId: string) => void

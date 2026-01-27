@@ -6,9 +6,10 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { theme } from './theme/theme'
-import { Timeline } from './components/Timeline'
 import { useEffect, useState } from 'react'
 import { useTaskStore } from './store/taskStore'
+import { CalendarView } from './components/CalendarView'
+import { ComingSoon } from './components/ComingSoon'
 
 function App() {
   // Expose store to window for console testing (optional)
@@ -104,7 +105,10 @@ function App() {
           }}
         >
           <Box sx={{ width: '100%', maxWidth: 980 }}>
-            <Timeline />
+            {activeNav === 'calendar' && <CalendarView />}
+            {activeNav === 'tasks' && <ComingSoon title="Tasks" />}
+            {activeNav === 'stats' && <ComingSoon title="Stats" />}
+            {activeNav === 'settings' && <ComingSoon title="Settings" />}
           </Box>
         </Box>
       </Box>

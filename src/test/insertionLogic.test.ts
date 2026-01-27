@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useTaskStore } from '../store/taskStore'
+import { getLocalDateKey } from '../utils/date'
+import { Task } from '../types'
 
 /**
  * Phase 4 Test Cases: Insertion Logic
@@ -15,8 +17,8 @@ import { useTaskStore } from '../store/taskStore'
 describe('Insertion Logic', () => {
   beforeEach(() => {
     // Reset store state before each test
-    // Clear all tasks by setting empty array
-    useTaskStore.setState({ tasks: [] })
+    const todayKey = getLocalDateKey(new Date())
+    useTaskStore.setState({ selectedDateKey: todayKey, tasksByDate: {} })
     localStorage.clear()
   })
 
@@ -33,7 +35,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      const tasks = useTaskStore.getState().tasks
+      const { selectedDateKey, tasksByDate } = useTaskStore.getState()
+      const tasks = tasksByDate[selectedDateKey] ?? []
       expect(tasks).toHaveLength(1)
       expect(tasks[0].title).toBe('First Task')
       expect(tasks[0].durationMinutes).toBe(60)
@@ -63,7 +66,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      const tasks = useTaskStore.getState().tasks
+      const { selectedDateKey, tasksByDate } = useTaskStore.getState()
+      const tasks = tasksByDate[selectedDateKey] ?? []
       expect(tasks).toHaveLength(2)
       
       // Both tasks should start at 8:00 AM since new task gets first slot
@@ -90,7 +94,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      const taskA = useTaskStore.getState().tasks[0]
+      const { selectedDateKey, tasksByDate } = useTaskStore.getState()
+      const taskA = (tasksByDate[selectedDateKey] ?? [])[0]
 
       // Add Task B (1h) - will be placed after Task A
       store.insertTask(taskA.id, {
@@ -110,7 +115,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      const tasks = useTaskStore.getState().tasks
+      const { selectedDateKey: key2, tasksByDate: byDate2 } = useTaskStore.getState()
+      const tasks = byDate2[key2] ?? []
       expect(tasks).toHaveLength(3)
 
       // Verify all three tasks exist with valid times
@@ -136,7 +142,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      const task1 = useTaskStore.getState().tasks[0]
+      const { selectedDateKey, tasksByDate } = useTaskStore.getState()
+      const task1 = (tasksByDate[selectedDateKey] ?? [])[0]
 
       store.insertTask(task1.id, {
         title: 'Task 2',
@@ -146,7 +153,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const task2 = tasks.find(t => t.title === 'Task 2')!
 
       store.insertTask(task2.id, {
@@ -166,7 +173,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       expect(tasks).toHaveLength(4)
 
       // All tasks should have valid start times (no undefined or NaN)
@@ -190,7 +197,10 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      const taskA = useTaskStore.getState().tasks[0]
+      const taskA = (
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ??
+          []
+      )[0]
 
       // Create Task B and lock it
       store.insertTask(taskA.id, {
@@ -201,13 +211,13 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const taskB = tasks.find(t => t.title === 'Task B')!
       
       // Lock Task B
       store.toggleLock(taskB.id)
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const lockedTaskB = tasks.find(t => t.title === 'Task B')!
       expect(lockedTaskB.isLocked).toBe(true)
 
@@ -223,7 +233,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       expect(tasks).toHaveLength(3)
 
       // Task B should remain at same time (locked)
@@ -243,7 +253,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const taskA = tasks[0]
 
       // Create Task B at 9:00 AM
@@ -255,13 +265,13 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const taskB = tasks.find(t => t.title === 'Task B')!
 
       // Lock Task B at 9:00 AM
       store.toggleLock(taskB.id)
       
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const lockedTaskB = tasks.find(t => t.title === 'Task B')!
       const taskBStartHour = lockedTaskB.startTime.getHours()
       const taskBStartMinute = lockedTaskB.startTime.getMinutes()
@@ -275,7 +285,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
       expect(tasks).toHaveLength(3)
 
       // Task B should still be at the same time
@@ -298,7 +309,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
       const taskA = tasks[0]
 
       // Create second task
@@ -310,8 +322,9 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
-      const taskB = tasks.find(t => t.title === 'Task B')!
+      tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
+      const taskB = tasks.find((t: Task) => t.title === 'Task B')!
 
       // Insert at end (after Task B)
       store.insertTask(taskB.id, {
@@ -322,11 +335,12 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
       expect(tasks).toHaveLength(3)
 
       // Task C should be scheduled after Task B ends
-      const taskC = tasks.find(t => t.title === 'Task C (End)')!
+      const taskC = tasks.find((t: Task) => t.title === 'Task C (End)')!
       expect(taskC).toBeDefined()
       
       // Verify Task C starts after Task B
@@ -348,7 +362,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       let lastTask = tasks[tasks.length - 1]
 
       store.insertTask(lastTask.id, {
@@ -359,7 +373,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       lastTask = tasks.find(t => t.title === 'Mid-Morning')!
 
       store.insertTask(lastTask.id, {
@@ -370,7 +384,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       lastTask = tasks.find(t => t.title === 'Late Morning')!
 
       store.insertTask(lastTask.id, {
@@ -381,7 +395,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
       expect(tasks).toHaveLength(4)
 
       // Verify all tasks have valid, non-overlapping times
@@ -417,7 +432,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       expect(tasks[0].color).toBeDefined()
       expect(tasks[0].color).toBeTruthy()
       
@@ -430,7 +445,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       expect(tasks[1].color).toBeDefined()
       
       // Colors should cycle through the palette
@@ -454,7 +469,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
       const taskA = tasks[0]
 
       store.insertTask(taskA.id, {
@@ -465,8 +481,9 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
-      const taskB = tasks.find(t => t.title === 'Task B')!
+      tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
+      const taskB = tasks.find((t: Task) => t.title === 'Task B')!
 
       store.insertTask(taskB.id, {
         title: 'Task C',
@@ -476,16 +493,16 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       
       // All order values should be unique
-      const orders = tasks.map(t => t.order)
+      const orders = tasks.map((t: Task) => t.order)
       const uniqueOrders = [...new Set(orders)]
       expect(uniqueOrders).toHaveLength(tasks.length)
 
       // Orders should be sequential (0, 1, 2)
-      orders.sort((a, b) => a - b)
-      orders.forEach((order, index) => {
+      orders.sort((a: number, b: number) => a - b)
+      orders.forEach((order: number, index: number) => {
         expect(order).toBe(index)
       })
     })
@@ -504,7 +521,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      const tasks = useTaskStore.getState().tasks
+      const tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       
       // Non-overlapping tasks should not be flagged
       expect(tasks[0].isOverlapping).toBe(false)
@@ -521,7 +538,8 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks =
+        useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? []
       const taskA = tasks[0]
 
       store.insertTask(taskA.id, {
@@ -532,10 +550,10 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       
       // Both tasks should not be overlapping
-      tasks.forEach(task => {
+      tasks.forEach((task: Task) => {
         expect(task.isOverlapping).toBe(false)
       })
     })
@@ -559,10 +577,16 @@ describe('Insertion Logic', () => {
       const stored = localStorage.getItem(STORAGE_KEY)
       expect(stored).toBeTruthy()
       
-      const parsedTasks = JSON.parse(stored!)
-      expect(parsedTasks).toHaveLength(1)
-      expect(parsedTasks[0].title).toBe('Persistent Task')
-      expect(parsedTasks[0].durationMinutes).toBe(45)
+      const parsedState = JSON.parse(stored!)
+      expect(parsedState.version).toBe(2)
+      expect(parsedState.selectedDateKey).toBeTruthy()
+      expect(parsedState.tasksByDate).toBeTruthy()
+
+      const dateKey = parsedState.selectedDateKey
+      const tasks = parsedState.tasksByDate[dateKey]
+      expect(tasks).toHaveLength(1)
+      expect(tasks[0].title).toBe('Persistent Task')
+      expect(tasks[0].durationMinutes).toBe(45)
     })
 
     it('should persist multiple insertions correctly', () => {
@@ -576,7 +600,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      let tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const task1 = tasks[0]
 
       store.insertTask(task1.id, {
@@ -587,7 +611,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      tasks = useTaskStore.getState().tasks
+      tasks = (useTaskStore.getState().tasksByDate[useTaskStore.getState().selectedDateKey] ?? [])
       const task2 = tasks.find(t => t.title === 'Task 2')!
 
       store.insertTask(task2.id, {
@@ -600,7 +624,10 @@ describe('Insertion Logic', () => {
 
       const stored = localStorage.getItem(STORAGE_KEY)
       expect(stored).toBeTruthy()
-      const parsedTasks = JSON.parse(stored!)
+      const parsedState = JSON.parse(stored!)
+      expect(parsedState.version).toBe(2)
+      const dateKey = parsedState.selectedDateKey
+      const parsedTasks = parsedState.tasksByDate[dateKey]
       expect(parsedTasks).toHaveLength(3)
     })
   })

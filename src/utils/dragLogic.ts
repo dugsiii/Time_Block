@@ -35,7 +35,8 @@ export const getDragAction = (
 export const executeSwap = (
   tasks: Task[],
   taskId1: string,
-  taskId2: string
+  taskId2: string,
+  baseDate: Date = new Date()
 ): Task[] | null => {
   const task1 = tasks.find((t) => t.id === taskId1)
   const task2 = tasks.find((t) => t.id === taskId2)
@@ -55,7 +56,7 @@ export const executeSwap = (
   })
 
   // Recalculate times based on new order
-  return recalculateTaskTimes(newTasks)
+  return recalculateTaskTimes(newTasks, baseDate)
 }
 
 /**
@@ -65,7 +66,8 @@ export const executeSwap = (
 export const executePush = (
   tasks: Task[],
   draggedTaskId: string,
-  targetTaskId: string
+  targetTaskId: string,
+  baseDate: Date = new Date()
 ): Task[] | null => {
   const draggedTask = tasks.find((t) => t.id === draggedTaskId)
   const targetTask = tasks.find((t) => t.id === targetTaskId)
@@ -112,7 +114,7 @@ export const executePush = (
   })
 
   // Recalculate times based on new order
-  return recalculateTaskTimes(reorderedTasks)
+  return recalculateTaskTimes(reorderedTasks, baseDate)
 }
 
 /**
@@ -184,7 +186,8 @@ export const reorderTasks = (tasks: Task[]): Task[] => {
  */
 export const moveTaskToEnd = (
   tasks: Task[],
-  draggedTaskId: string
+  draggedTaskId: string,
+  baseDate: Date = new Date()
 ): Task[] | null => {
   const draggedTask = tasks.find((t) => t.id === draggedTaskId)
 
@@ -212,5 +215,5 @@ export const moveTaskToEnd = (
   })
 
   // Recalculate times based on new order
-  return recalculateTaskTimes(reorderedTasks)
+  return recalculateTaskTimes(reorderedTasks, baseDate)
 }
