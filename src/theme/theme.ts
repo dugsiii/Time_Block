@@ -1,12 +1,14 @@
 import { createTheme } from '@mui/material/styles'
 
-// Task block colors - alternating greens (pastel to forest)
+// Task block colors - premium pastels (mint, sage, seafoam)
 export const taskColors = [
-  '#E8F5E9', // Green 1: Pastel green (very light, soft)
-  '#C8E6C9', // Green 2: Light mint green
-  '#A5D6A7', // Green 3: Medium green
-  '#81C784', // Green 4: Medium-dark green
-  '#66BB6A', // Green 5: Forest green (richest)
+  '#E3F2FD', // Soft Blue/Cyan
+  '#E0F2F1', // Light Mint/Teal (Reference Card 1)
+  '#E8F5E9', // Pastel Green
+  '#F1F8E9', // Light Lime/Green
+  '#F9FBE7', // Soft Yellow/Green
+  '#C8E6C9', // Slightly deeper Mint (Reference Card 2)
+  '#B2DFDB', // Deeper Teal (Reference Card 3)
 ]
 
 // Special state colors

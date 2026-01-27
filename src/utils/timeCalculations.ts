@@ -277,6 +277,11 @@ export const getVisibleTimeRange = (
  * Format time as "8:00 AM" or "2:30 PM"
  */
 export const formatTime = (date: Date): string => {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    console.error('formatTime: Invalid date provided', date)
+    return 'Invalid Time'
+  }
+  
   let hours = date.getHours()
   const minutes = date.getMinutes()
   const ampm = hours >= 12 ? 'PM' : 'AM'

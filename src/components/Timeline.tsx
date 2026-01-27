@@ -234,7 +234,14 @@ export const Timeline = () => {
       </Box>
 
       {/* Timeline */}
-      <Box sx={{ position: 'relative' }}>
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 'calc(var(--time-col-width) + var(--timeline-gap) + var(--task-col-max))',
+          mx: 'auto',
+        }}
+      >
         <Box
           sx={{
             position: 'absolute',

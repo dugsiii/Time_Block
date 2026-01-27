@@ -6,22 +6,16 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import { theme } from './theme/theme'
-import { useEffect, useState } from 'react'
-import { useTaskStore } from './store/taskStore'
-import { CalendarView } from './components/CalendarView'
+import { useState } from 'react'
+import { TodayView } from './components/TodayView'
 import { ComingSoon } from './components/ComingSoon'
 
 function App() {
-  // Expose store to window for console testing (optional)
-  useEffect(() => {
-    (window as unknown as { taskStore: typeof useTaskStore }).taskStore = useTaskStore
-    console.log('✅ Task store available at window.taskStore')
-  }, [])
-
-  const [activeNav, setActiveNav] = useState<'calendar' | 'tasks' | 'stats' | 'settings'>('calendar')
+  const [activeNav, setActiveNav] = useState<'today' | 'tasks' | 'stats' | 'settings'>('today')
+  const [selectedDateKey, setSelectedDateKey] = useState<string | undefined>()
 
   const navItems = [
-    { key: 'calendar' as const, label: 'Calendar', icon: CalendarMonthOutlinedIcon },
+    { key: 'today' as const, label: 'Calendar', icon: CalendarMonthOutlinedIcon },
     { key: 'tasks' as const, label: 'Tasks', icon: CheckCircleOutlineOutlinedIcon },
     { key: 'stats' as const, label: 'Stats', icon: BarChartOutlinedIcon },
     { key: 'settings' as const, label: 'Settings', icon: SettingsOutlinedIcon },
@@ -40,18 +34,18 @@ function App() {
       >
         <Box
           sx={{
-            width: 120,
-            flex: '0 0 120px',
+            width: 128,
+            flex: '0 0 128px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 1,
-            py: 4,
+            gap: 2,
+            py: 6,
             px: 1,
-            borderRight: '1px solid rgba(0,0,0,0.06)',
+            borderRight: '1px solid rgba(0,0,0,0.04)',
             background:
-              'linear-gradient(180deg, rgba(183, 226, 205, 0.55) 0%, rgba(183, 226, 205, 0.18) 60%, rgba(255, 255, 255, 0) 100%)',
-            backdropFilter: 'blur(10px)',
+              'linear-gradient(180deg, rgba(232, 245, 233, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%)',
+            backdropFilter: 'blur(20px)',
           }}
         >
           {navItems.map((item) => {
@@ -61,34 +55,45 @@ function App() {
             return (
               <ButtonBase
                 key={item.key}
-                onClick={() => setActiveNav(item.key)}
+                onClick={() => {
+                  if (item.key === 'today') {
+                    setActiveNav('today')
+                    setSelectedDateKey(undefined)
+                  } else {
+                    setActiveNav(item.key)
+                  }
+                }}
                 sx={{
                   width: '100%',
-                  borderRadius: 999,
-                  py: 1.25,
+                  borderRadius: '16px',
+                  py: 1.5,
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 0.75,
-                  color: isActive ? '#000000' : 'rgba(0,0,0,0.55)',
-                  transition: 'color 150ms ease',
+                  gap: 1,
+                  color: isActive ? '#000000' : 'rgba(0,0,0,0.4)',
+                  transition: 'all 200ms ease',
+                  '&:hover': {
+                    color: '#000000',
+                  },
                 }}
               >
                 <Box
                   sx={{
-                    width: 56,
-                    height: 56,
+                    width: 64,
+                    height: 64,
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: isActive ? 'rgba(255,255,255,0.7)' : 'transparent',
-                    boxShadow: isActive ? '0 12px 24px rgba(0,0,0,0.10)' : 'none',
-                    transition: 'background-color 150ms ease, box-shadow 150ms ease',
+                    backgroundColor: isActive ? 'rgba(255,255,255,0.9)' : 'transparent',
+                    boxShadow: isActive ? '0 12px 32px rgba(0,0,0,0.08)' : 'none',
+                    border: isActive ? '1px solid rgba(0,0,0,0.02)' : 'none',
+                    transition: 'all 250ms cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
-                  <Icon sx={{ fontSize: 22 }} />
+                  <Icon sx={{ fontSize: 26 }} />
                 </Box>
-                <Typography sx={{ fontSize: 12, fontWeight: 500, lineHeight: 1.2 }}>
+                <Typography sx={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.01em' }}>
                   {item.label}
                 </Typography>
               </ButtonBase>
@@ -105,7 +110,7 @@ function App() {
           }}
         >
           <Box sx={{ width: '100%', maxWidth: 980 }}>
-            {activeNav === 'calendar' && <CalendarView />}
+            {activeNav === 'today' && <TodayView selectedDateKey={selectedDateKey} onDateChange={setSelectedDateKey} />}
             {activeNav === 'tasks' && <ComingSoon title="Tasks" />}
             {activeNav === 'stats' && <ComingSoon title="Stats" />}
             {activeNav === 'settings' && <ComingSoon title="Settings" />}

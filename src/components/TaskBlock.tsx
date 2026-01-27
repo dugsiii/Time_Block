@@ -114,44 +114,43 @@ export const TaskBlock = ({
       onMouseLeave={() => setIsHovered(false)}
       sx={{
         position: 'relative',
-        background: `linear-gradient(90deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 70%), ${backgroundColor}`,
-        borderRadius: '16px',
+        background: `linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%), ${backgroundColor}`,
+        borderRadius: '20px', // More rounded as per ref
         border: isBeingDragged
-          ? '2px dashed #000000'
+          ? '2px dashed rgba(0,0,0,0.1)'
           : task.isOverlapping
-          ? `2px solid ${colors.overlapBorder}`
-          : isDropTarget
-          ? '2px solid #000000'
-          : 'none',
-        padding: '18px',
-        marginBottom: '10px',
+            ? `2px solid ${colors.overlapBorder}`
+            : isDropTarget
+              ? '2px solid rgba(0,0,0,0.2)'
+              : '1px solid rgba(0,0,0,0.03)',
+        padding: '24px', // More padding
         minHeight: `${height}px`,
         cursor: task.isLocked ? 'not-allowed' : isBeingDragged ? 'grabbing' : 'grab',
-        opacity: isBeingDragged ? 0.85 : isDragging ? 0.85 : isPreview ? 0.6 : 1,
-        transition: 'box-shadow 150ms ease, opacity 150ms ease, border 150ms ease',
+        opacity: isBeingDragged ? 0.8 : isDragging ? 0.8 : isPreview ? 0.6 : 1,
+        transition: 'all 200ms cubic-bezier(0.4, 0, 0.2, 1)',
         boxShadow: isBeingDragged
-          ? '0 4px 12px rgba(0,0,0,0.15)'
+          ? '0 20px 40px rgba(0,0,0,0.12)'
           : showNewHighlight
-          ? '0 0 0 3px #4CAF50, 0 4px 12px rgba(76, 175, 80, 0.3)'
-          : '0 10px 26px rgba(0,0,0,0.10)',
+            ? '0 0 0 3px #4CAF50, 0 8px 20px rgba(76, 175, 80, 0.2)'
+            : '0 8px 24px rgba(0,0,0,0.06)', // Softer shadow
         '&:hover': {
-          boxShadow: task.isLocked || isBeingDragged ? '0 10px 26px rgba(0,0,0,0.10)' : '0 14px 32px rgba(0,0,0,0.14)',
+          boxShadow: task.isLocked || isBeingDragged ? '0 8px 24px rgba(0,0,0,0.06)' : '0 12px 32px rgba(0,0,0,0.1)',
+          transform: task.isLocked || isBeingDragged ? 'none' : 'translateY(-1px)',
         },
         // Overlapping pulse animation
         animation: task.isOverlapping
           ? 'pulse 1.5s ease-in-out infinite'
           : showNewHighlight
-          ? 'newTaskGlow 0.5s ease-out'
-          : 'none',
+            ? 'newTaskGlow 0.5s ease-out'
+            : 'none',
         '@keyframes pulse': {
           '0%, 100%': { borderColor: colors.overlapBorder, opacity: 1 },
           '50%': { borderColor: colors.overlapBorder, opacity: 0.6 },
         },
         '@keyframes newTaskGlow': {
-          '0%': { boxShadow: '0 0 0 6px #4CAF50, 0 8px 24px rgba(76, 175, 80, 0.5)' },
-          '100%': { boxShadow: '0 0 0 3px #4CAF50, 0 4px 12px rgba(76, 175, 80, 0.3)' },
+          '0%': { boxShadow: '0 0 0 6px #4CAF50, 0 8px 24px rgba(76, 175, 80, 0.4)' },
+          '100%': { boxShadow: '0 0 0 3px #4CAF50, 0 4px 12px rgba(76, 175, 80, 0.2)' },
         },
-        // Overflow hidden for the highlight bar
         overflow: 'hidden',
       }}
     >
@@ -159,12 +158,12 @@ export const TaskBlock = ({
       <Typography
         variant="h6"
         sx={{
-          fontSize: '18px',
+          fontSize: '20px',
           fontWeight: 600,
-          color: '#000000',
-          lineHeight: 1.3,
-          mb: 0.75,
-          pr: 4, // Space for lock icon
+          color: 'rgba(0,0,0,0.85)',
+          lineHeight: 1.2,
+          mb: 0.5,
+          pr: 4,
         }}
       >
         {task.title}
@@ -174,8 +173,9 @@ export const TaskBlock = ({
       <Typography
         variant="body2"
         sx={{
-          fontSize: '13px',
-          color: '#666666',
+          fontSize: '15px',
+          fontWeight: 500,
+          color: 'rgba(0,0,0,0.45)',
         }}
       >
         Est. {formatDuration(task.durationMinutes)}
