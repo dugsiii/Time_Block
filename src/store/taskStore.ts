@@ -82,7 +82,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
    * The afterTaskId parameter is now used as a hint, but the actual insertion
    * position is calculated based on available slots
    */
-  insertTask: (afterTaskId, taskData) => {
+  insertTask: (_afterTaskId, taskData) => {
     const currentTasks = get().tasks
     const currentTaskCount = currentTasks.length
 

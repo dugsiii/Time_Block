@@ -69,12 +69,13 @@ export const EndZoneDropTarget = ({
       sx={{
         minHeight: isDragging ? '80px' : '40px',
         marginTop: '8px',
-        marginLeft: '114px', // Align with task blocks (90px time label + 24px gap)
-        width: '400px',
+        marginLeft: 'calc(var(--time-col-width) + var(--timeline-gap))',
+        width: '100%',
+        maxWidth: 'var(--task-col-max)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '8px',
+        borderRadius: '14px',
         border: isDropTarget ? '2px solid #000000' : '2px dashed #BDBDBD',
         backgroundColor: isDropTarget ? 'rgba(0, 0, 0, 0.05)' : 'transparent',
         opacity: isDragging ? 1 : 0.5,
@@ -94,4 +95,6 @@ export const EndZoneDropTarget = ({
     </Box>
   )
 }
+
+
 

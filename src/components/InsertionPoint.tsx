@@ -23,8 +23,8 @@ export const InsertionPoint = ({
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
       sx={{
-        height: '24px', // Larger hit area
-        margin: '-12px 0', // Negative margin to center in gap without adding layout height
+        height: '32px', // Height for the hover area above task
+        marginBottom: '-8px', // Pull it closer to the task below
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -45,27 +45,15 @@ export const InsertionPoint = ({
           position: 'relative',
         }}
       >
-        {/* Horizontal Line - gives visual cue of insertion placement */}
-        <Box
-          sx={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            height: '1px',
-            backgroundColor: '#000000',
-            opacity: 0.1, // Very subtle
-          }}
-        />
-
         {/* Minimalistic Button */}
         <IconButton
           disableRipple
           sx={{
-            width: '20px',
-            height: '20px',
+            width: '24px',
+            height: '24px',
             backgroundColor: '#FFFFFF',
-            border: '1px solid #E0E0E0', // Subtle border initially
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            border: '1px solid #E0E0E0',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
             padding: 0,
             zIndex: 1,
             minWidth: 'unset',
@@ -73,7 +61,8 @@ export const InsertionPoint = ({
             '&:hover': {
               backgroundColor: '#000000',
               borderColor: '#000000',
-              transform: 'scale(1.1)',
+              transform: 'scale(1.15)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
               '& .MuiSvgIcon-root': {
                 color: '#FFFFFF',
               },
@@ -82,8 +71,8 @@ export const InsertionPoint = ({
         >
           <AddIcon
             sx={{
-              fontSize: '14px',
-              color: '#666666', // Subtle icon color
+              fontSize: '16px',
+              color: '#666666',
               transition: 'color 200ms ease',
             }}
           />

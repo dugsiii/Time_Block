@@ -11,7 +11,6 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 
 interface TaskBlockProps {
   task: Task
-  index: number
   onToggleLock: (taskId: string) => void
   onDelete: (taskId: string) => void
   onDragStart?: (taskId: string) => void
@@ -32,7 +31,6 @@ interface TaskBlockProps {
  */
 export const TaskBlock = ({
   task,
-  index,
   onToggleLock,
   onDelete,
   onDragStart,
@@ -116,8 +114,8 @@ export const TaskBlock = ({
       onMouseLeave={() => setIsHovered(false)}
       sx={{
         position: 'relative',
-        backgroundColor,
-        borderRadius: '8px',
+        background: `linear-gradient(90deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 70%), ${backgroundColor}`,
+        borderRadius: '16px',
         border: isBeingDragged
           ? '2px dashed #000000'
           : task.isOverlapping
@@ -125,8 +123,8 @@ export const TaskBlock = ({
           : isDropTarget
           ? '2px solid #000000'
           : 'none',
-        padding: '16px',
-        marginBottom: '8px',
+        padding: '18px',
+        marginBottom: '10px',
         minHeight: `${height}px`,
         cursor: task.isLocked ? 'not-allowed' : isBeingDragged ? 'grabbing' : 'grab',
         opacity: isBeingDragged ? 0.85 : isDragging ? 0.85 : isPreview ? 0.6 : 1,
@@ -135,9 +133,9 @@ export const TaskBlock = ({
           ? '0 4px 12px rgba(0,0,0,0.15)'
           : showNewHighlight
           ? '0 0 0 3px #4CAF50, 0 4px 12px rgba(76, 175, 80, 0.3)'
-          : 'none',
+          : '0 10px 26px rgba(0,0,0,0.10)',
         '&:hover': {
-          boxShadow: task.isLocked || isBeingDragged ? 'none' : '0 2px 8px rgba(0,0,0,0.1)',
+          boxShadow: task.isLocked || isBeingDragged ? '0 10px 26px rgba(0,0,0,0.10)' : '0 14px 32px rgba(0,0,0,0.14)',
         },
         // Overlapping pulse animation
         animation: task.isOverlapping
@@ -165,7 +163,7 @@ export const TaskBlock = ({
           fontWeight: 600,
           color: '#000000',
           lineHeight: 1.3,
-          mb: 0.5,
+          mb: 0.75,
           pr: 4, // Space for lock icon
         }}
       >

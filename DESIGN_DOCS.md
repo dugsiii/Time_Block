@@ -13,6 +13,11 @@ A minimalistic single-column time blocking application where users can insert ta
 - Offline-first (localStorage persistence)
 - Web application (starting platform)
 
+**Current UI Shell (Concept Art Implementation):**
+- Left navigation rail (Calendar / Tasks / Stats / Settings)
+- Centered day view with header and timeline
+- Floating [+] button (top-right) as primary task creation entry point
+
 **Key Innovation:** Tasks auto-calculate times based on position and duration. Dragging triggers intelligent SWAP or PUSH operations that respect locked tasks.
 
 ---
@@ -712,35 +717,20 @@ src/
 
 ### Layout Structure
 
-**Single Column Design:**
+**Single Column Design (Centered Day View):**
 ```
-┌────────────────────────────┐
-│  Time Blocking App         │
-├────────────────────────────┤
-│                            │
-│  07:00 AM (gray)           │  ← TimeLabel (unfocused)
-│                            │
-│  08:00 AM (black)          │  ← TimeLabel (focused - drop target)
-│  ┌──────────────────────┐  │
-│  │ Task A: 2h           │  │  ← TaskBlock
-│  │ Write design docs    │  │
-│  └──────────────────────┘  │
-│         [+]                │  ← InsertionPoint (on hover)
-│  10:00 AM (gray)           │
-│  ┌──────────────────────┐  │
-│  │ Task B: 1h  🔒       │  │  ← TaskBlock (locked)
-│  │ Team meeting         │  │
-│  └──────────────────────┘  │
-│         [+]                │
-│  11:00 AM (gray)           │
-│  ┌──────────────────────┐  │
-│  │ Task C: 1.5h         │  │  ← TaskBlock
-│  │ Code review          │  │
-│  └──────────────────────┘  │
-│         [+]                │
-│  12:30 PM (gray)           │
-│                            │
-└────────────────────────────┘
+┌───────────────────────────────────────────┐
+│ Nav Rail │        Centered Day View       │
+│ (icons)  │   Time Blocking App    [+]     │
+│          │   Yesterday  Today  Tomorrow   │
+│          │   08:00  ┌───────────────┐     │
+│          │          │ Task A        │     │
+│          │          │ Est. 2h       │     │
+│          │          └───────────────┘     │
+│          │   10:00  ┌───────────────┐     │
+│          │          │ Task B   🔒    │     │
+│          │          └───────────────┘     │
+└───────────────────────────────────────────┘
 ```
 
 ---

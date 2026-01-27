@@ -35,8 +35,8 @@ Before:              After PUSH:
 ```
 
 ### Design Philosophy
-- **Minimalistic** - Clean black & white interface with green task blocks
-- **Notion-Inspired** - Simple, focused, distraction-free
+- **Minimalistic** - Clean, airy layout with soft depth and green task blocks
+- **Concept Art Inspired** - Left navigation rail + centered day view
 - **No Clutter** - Spacing-based separation, no unnecessary borders
 - **Accessible** - WCAG AA contrast ratios, keyboard navigation
 
@@ -80,6 +80,10 @@ npm run preview
 2. **Enter task name** (e.g., "Write design docs")
 3. **Enter duration** in minutes (e.g., 120 for 2 hours)
 4. **Click "Add Task"** or press Enter
+
+You can add tasks from:
+- The **floating [+] button** in the top-right of the day view
+- Any **insertion point** between tasks
 
 ### Reordering Tasks
 
@@ -151,12 +155,24 @@ src/
 └── App.tsx                   # Root component
 ```
 
+## 🧭 UI Layout (Concept Art)
+
+- **Left navigation rail**
+  - Calendar / Tasks / Stats / Settings
+  - Note: navigation is currently visual-only (single view MVP).
+- **Centered day view**
+  - Title + scheduled count
+  - Day header row (Yesterday / Today / Tomorrow)
+  - Timeline with time labels and pill task cards
+- **Floating [+] button**
+  - Primary way to add a new task
+
 ## 🎨 Design System
 
 ### Colors
 ```typescript
 // Base
-Background:    #FFFFFF (Pure white)
+Background:    #FFFFFF → #F7FBF8 (soft gradient)
 Text Primary:  #000000 (Black)
 Text Secondary: #666666 (Medium gray)
 Accents:       #000000 (Black buttons)

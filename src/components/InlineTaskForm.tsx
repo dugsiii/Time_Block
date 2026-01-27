@@ -66,9 +66,10 @@ export const InlineTaskForm = ({
       sx={{
         p: 2,
         mb: 1.5,
-        backgroundColor: '#FAFAFA',
-        borderRadius: '8px',
-        border: '2px solid #000000',
+        backgroundColor: 'rgba(255,255,255,0.75)',
+        borderRadius: '16px',
+        border: '1px solid rgba(0,0,0,0.12)',
+        boxShadow: '0 10px 26px rgba(0,0,0,0.08)',
       }}
     >
       <TextField

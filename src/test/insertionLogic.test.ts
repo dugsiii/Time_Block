@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useTaskStore } from '../store/taskStore'
-import { Task } from '../types'
 
 /**
  * Phase 4 Test Cases: Insertion Logic
@@ -16,7 +15,6 @@ import { Task } from '../types'
 describe('Insertion Logic', () => {
   beforeEach(() => {
     // Reset store state before each test
-    const store = useTaskStore.getState()
     // Clear all tasks by setting empty array
     useTaskStore.setState({ tasks: [] })
     localStorage.clear()
@@ -333,8 +331,7 @@ describe('Insertion Logic', () => {
       
       // Verify Task C starts after Task B
       const taskBEnd = new Date(taskB.startTime.getTime() + taskB.durationMinutes * 60000)
-      // Task C should start at or after Task B ends
-      // Note: The actual implementation may recalculate times
+      expect(taskC.startTime.getTime()).toBeGreaterThanOrEqual(taskBEnd.getTime() - 1000)
     })
   })
 
@@ -507,7 +504,7 @@ describe('Insertion Logic', () => {
         startTime: new Date(),
       })
 
-      let tasks = useTaskStore.getState().tasks
+      const tasks = useTaskStore.getState().tasks
       
       // Non-overlapping tasks should not be flagged
       expect(tasks[0].isOverlapping).toBe(false)

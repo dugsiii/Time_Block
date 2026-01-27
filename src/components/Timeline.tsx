@@ -1,4 +1,4 @@
-import { Box, Typography } from '@mui/material'
+import { Box, IconButton, Typography } from '@mui/material'
 import { useState, useRef } from 'react'
 import { useTaskStore } from '../store/taskStore'
 import { TaskBlock } from './TaskBlock'
@@ -6,8 +6,10 @@ import { InsertionPoint } from './InsertionPoint'
 import { InlineTaskForm } from './InlineTaskForm'
 import { TimeLabel } from './TimeLabel'
 import { EndZoneDropTarget } from './EndZoneDropTarget'
-import { generateTimeLabels, getVisibleTimeRange } from '../utils/timeCalculations'
 import { getDragAction } from '../utils/dragLogic'
+import AddIcon from '@mui/icons-material/Add'
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
+import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 
 /**
  * Timeline component - main container for the time blocking interface
@@ -31,16 +33,17 @@ export const Timeline = () => {
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null)
   const taskRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
-  // Calculate visible time range
-  const { start, end } = getVisibleTimeRange(tasks)
-  const timeLabels = generateTimeLabels(start, end)
-
   // Check if the last task is locked (for showing end zone drop target)
   const lastTask = tasks[tasks.length - 1]
   const hasLockedTaskAtEnd = lastTask?.isLocked ?? false
 
   const handleInsertTask = (afterTaskId: string | null, title: string, durationMinutes: number) => {
-    insertTask(afterTaskId, {
+    // If afterTaskId is provided, we want to insert BEFORE that task
+    // So we need to find the previous task or null if it's the first task
+    const targetIndex = tasks.findIndex(t => t.id === afterTaskId)
+    const previousTaskId = targetIndex > 0 ? tasks[targetIndex - 1].id : null
+    
+    insertTask(previousTaskId, {
       title,
       durationMinutes,
       isLocked: false,
@@ -105,111 +108,135 @@ export const Timeline = () => {
     setDraggingTaskId(null)
   }
 
+  const currentDate = new Date()
+  const dateLabel = currentDate.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  })
+
   return (
     <Box
       sx={{
-        maxWidth: '650px',
-        margin: '0 auto',
-        padding: '24px 16px',
+        position: 'relative',
+        py: { xs: 3, sm: 5 },
+        '--time-col-width': '110px',
+        '--timeline-gap': '24px',
+        '--task-col-max': '560px',
       }}
     >
-      {/* Header */}
-      <Box sx={{ mb: 4, textAlign: 'center' }}>
-        <Typography variant="h6" sx={{ fontSize: '20px', fontWeight: 600, mb: 1 }}>
+      <Box sx={{ mb: { xs: 3, sm: 4 }, textAlign: 'center' }}>
+        <Typography variant="h6" sx={{ fontSize: { xs: '22px', sm: '28px' }, fontWeight: 700, mb: 0.75 }}>
           Time Blocking App
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {tasks.length === 0 ? 'Click [+] to add your first task' : `${tasks.length} task${tasks.length === 1 ? '' : 's'} scheduled`}
+          {tasks.length === 0 ? 'No tasks scheduled' : `${tasks.length} task${tasks.length === 1 ? '' : 's'} scheduled`}
         </Typography>
       </Box>
 
+      <IconButton
+        aria-label="Add task"
+        onClick={() => setActiveInsertionPoint('start')}
+        sx={{
+          position: 'absolute',
+          top: { xs: 16, sm: 22 },
+          right: { xs: 0, sm: 8 },
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          backgroundColor: '#FFFFFF',
+          boxShadow: '0 12px 28px rgba(0,0,0,0.12)',
+          border: '1px solid rgba(0,0,0,0.06)',
+          '&:hover': {
+            backgroundColor: '#FFFFFF',
+            boxShadow: '0 16px 34px rgba(0,0,0,0.16)',
+          },
+        }}
+      >
+        <AddIcon />
+      </IconButton>
+
+      <Box
+        sx={{
+          mb: { xs: 2, sm: 3 },
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 2,
+          color: 'text.secondary',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <ChevronLeftIcon sx={{ fontSize: 18, opacity: 0.6 }} />
+          <Typography variant="body2" sx={{ fontSize: 14, opacity: 0.75 }}>
+            Yesterday
+          </Typography>
+        </Box>
+
+        <Typography sx={{ fontSize: 16, fontWeight: 700, color: 'text.primary' }}>
+          {dateLabel}
+        </Typography>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography variant="body2" sx={{ fontSize: 14, opacity: 0.75 }}>
+            Tomorrow
+          </Typography>
+          <ChevronRightIcon sx={{ fontSize: 18, opacity: 0.6 }} />
+        </Box>
+      </Box>
+
       {/* Timeline */}
-      <Box>
-        {/* Insertion point at the beginning */}
-        <Box sx={{ display: 'flex', gap: 3 }}>
-          {/* Empty space for time label alignment */}
-          <Box sx={{ minWidth: '90px' }} />
-          
-          {/* Insertion point / form */}
-          <Box sx={{ width: '400px' }}>
-            {activeInsertionPoint === 'start' ? (
+      <Box sx={{ position: 'relative' }}>
+        <Box
+          sx={{
+            position: 'absolute',
+            left: 'calc(var(--time-col-width) + (var(--timeline-gap) / 2))',
+            top: 0,
+            bottom: 0,
+            width: '1px',
+            backgroundColor: 'rgba(0,0,0,0.06)',
+          }}
+        />
+
+        {activeInsertionPoint === 'start' && (
+          <Box sx={{ display: 'flex', gap: 'var(--timeline-gap)', mb: 1 }}>
+            <Box sx={{ minWidth: 'var(--time-col-width)' }} />
+            <Box sx={{ width: '100%', maxWidth: 'var(--task-col-max)' }}>
               <InlineTaskForm
                 onSubmit={(title, duration) => handleInsertTask(null, title, duration)}
                 onCancel={handleCancelInsert}
               />
-            ) : (
-              <InsertionPoint
-                onClick={() => setActiveInsertionPoint('start')}
-                isActive={activeInsertionPoint === 'start'}
-              />
-            )}
+            </Box>
           </Box>
-        </Box>
+        )}
 
         {/* Tasks with time labels */}
         {tasks.length === 0 ? (
           <Box
             sx={{
+              mt: 2,
               p: 4,
               textAlign: 'center',
-              backgroundColor: '#FAFAFA',
-              borderRadius: '8px',
-              border: '1px solid #E0E0E0',
+              backgroundColor: 'rgba(255,255,255,0.65)',
+              borderRadius: '16px',
+              border: '1px solid rgba(0,0,0,0.06)',
+              boxShadow: '0 10px 26px rgba(0,0,0,0.06)',
             }}
           >
             <Typography variant="body2" color="text.secondary">
-              No tasks yet. Click the [+] button above to get started!
+              Click the [+] button to add your first task.
             </Typography>
           </Box>
         ) : (
-          tasks.map((task, index) => (
+          tasks.map((task) => (
             <Box key={task.id}>
-              {/* Task row with time label on left */}
-              <Box 
-                sx={{ 
-                  display: 'flex', 
-                  gap: 3, 
-                  alignItems: 'flex-start',
-                  // Smooth transition when tasks shift
-                  transition: 'transform 250ms ease-out, margin 250ms ease-out',
-                }}
-              >
-                {/* Time label (left side) */}
-                <Box sx={{ minWidth: '90px', pt: '16px', textAlign: 'right' }}>
-                  <TimeLabel time={task.startTime} />
-                </Box>
-
-                {/* Task block (centered) */}
-                <Box
-                  ref={(el) => {
-                    if (el) {
-                      taskRefs.current.set(task.id, el as any)
-                    } else {
-                      taskRefs.current.delete(task.id)
-                    }
-                  }}
-                  sx={{ width: '400px' }}
-                >
-                  <TaskBlock
-                    task={task}
-                    index={index}
-                    onToggleLock={toggleLock}
-                    onDelete={deleteTask}
-                    onDragStart={handleDragStart}
-                    onDragEnd={handleDragEnd}
-                    onDrop={handleDrop}
-                    isDragging={draggingTaskId === task.id}
-                  />
-                </Box>
-              </Box>
-
-              {/* Insertion point AFTER this task */}
-              <Box sx={{ display: 'flex', gap: 3 }}>
+              {/* Insertion point BEFORE this task */}
+              <Box sx={{ display: 'flex', gap: 'var(--timeline-gap)' }}>
                 {/* Empty space for time label alignment */}
-                <Box sx={{ minWidth: '90px' }} />
+                <Box sx={{ minWidth: 'var(--time-col-width)' }} />
                 
                 {/* Insertion point / form */}
-                <Box sx={{ width: '400px' }}>
+                <Box sx={{ width: '100%', maxWidth: 'var(--task-col-max)' }}>
                   {activeInsertionPoint === task.id ? (
                     <InlineTaskForm
                       onSubmit={(title, duration) => handleInsertTask(task.id, title, duration)}
@@ -223,8 +250,73 @@ export const Timeline = () => {
                   )}
                 </Box>
               </Box>
+
+              {/* Task row with time label on left */}
+              <Box 
+                sx={{ 
+                  display: 'flex', 
+                  gap: 'var(--timeline-gap)', 
+                  alignItems: 'center',
+                  // Smooth transition when tasks shift
+                  transition: 'transform 250ms ease-out, margin 250ms ease-out',
+                }}
+              >
+                {/* Time label (left side) */}
+                <Box sx={{ minWidth: 'var(--time-col-width)', textAlign: 'right' }}>
+                  <TimeLabel time={task.startTime} />
+                </Box>
+
+                {/* Task block (centered) */}
+                <Box
+                  ref={(node) => {
+                    const el = node as HTMLDivElement | null
+                    if (el) {
+                      taskRefs.current.set(task.id, el)
+                    } else {
+                      taskRefs.current.delete(task.id)
+                    }
+                  }}
+                  sx={{ width: '100%', maxWidth: 'var(--task-col-max)' }}
+                >
+                  <TaskBlock
+                    task={task}
+                    onToggleLock={toggleLock}
+                    onDelete={deleteTask}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDrop={handleDrop}
+                    isDragging={draggingTaskId === task.id}
+                  />
+                </Box>
+              </Box>
             </Box>
           ))
+        )}
+
+        {/* Insertion point after last task */}
+        {tasks.length > 0 && (
+          <Box sx={{ display: 'flex', gap: 'var(--timeline-gap)', mt: 1 }}>
+            {/* Empty space for time label alignment */}
+            <Box sx={{ minWidth: 'var(--time-col-width)' }} />
+            
+            {/* Insertion point / form */}
+            <Box sx={{ width: '100%', maxWidth: 'var(--task-col-max)' }}>
+              {activeInsertionPoint === 'end' ? (
+                <InlineTaskForm
+                  onSubmit={(title, duration) => {
+                    const lastTask = tasks[tasks.length - 1]
+                    handleInsertTask(lastTask.id, title, duration)
+                  }}
+                  onCancel={handleCancelInsert}
+                />
+              ) : (
+                <InsertionPoint
+                  onClick={() => setActiveInsertionPoint('end')}
+                  isActive={activeInsertionPoint === 'end'}
+                />
+              )}
+            </Box>
+          </Box>
         )}
 
         {/* End zone drop target - shown when dragging, especially useful when last task is locked */}
@@ -240,7 +332,7 @@ export const Timeline = () => {
       {tasks.length > 0 && (
         <Box sx={{ mt: 3, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-            Tip: Create tasks with [+] at top, then drag to reorder
+            Tip: Create tasks with [+] at top, then drag to reorder.
           </Typography>
         </Box>
       )}
